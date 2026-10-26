@@ -1,28 +1,52 @@
-import { axiosForBackend } from '@lark-apaas/client-toolkit/utils/getAxiosForBackend';
+import { supabase } from '@/lib/supabase';
 import type {
   Task,
   TaskPriority,
-  TaskListResponse,
   CreateTaskRequest,
   UpdateTaskRequest,
 } from '@shared/api.interface';
 
 export async function getTasks(priority?: TaskPriority): Promise<Task[]> {
-  const url = priority ? `/api/tasks?priority=${priority}` : '/api/tasks';
-  const response = await axiosForBackend.get<TaskListResponse>(url);
-  return response.data.items;
+  let query = supabase.from('tasks').select('*').order('created_at', { ascending: false });
+
+  if (priority) {
+    query = query.eq('priority', priority);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data ?? []) as Task[];
 }
 
 export async function createTask(data: CreateTaskRequest): Promise<Task> {
-  const response = await axiosForBackend.post<Task>('/api/tasks', data);
-  return response.data;
+  const { data: result, error } = await supabase
+    .from('tasks')
+    .insert({ title: data.title, priority: data.priority })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return result as Task;
 }
 
 export async function updateTask(id: number, data: UpdateTaskRequest): Promise<Task> {
-  const response = await axiosForBackend.patch<Task>(`/api/tasks/${id}`, data);
-  return response.data;
+  const patch: Record<string, unknown> = {};
+  if (data.title !== undefined) patch.title = data.title;
+  if (data.priority !== undefined) patch.priority = data.priority;
+  if (data.completed !== undefined) patch.completed = data.completed;
+
+  const { data: result, error } = await supabase
+    .from('tasks')
+    .update(patch)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return result as Task;
 }
 
 export async function deleteTask(id: number): Promise<void> {
-  await axiosForBackend.delete(`/api/tasks/${id}`);
+  const { error } = await supabase.from('tasks').delete().eq('id', id);
+  if (error) throw error;
 }

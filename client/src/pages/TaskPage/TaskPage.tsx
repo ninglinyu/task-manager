@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { Plus, Check, Trash2, Filter } from 'lucide-react';
 import { toast } from 'sonner';
-import { logger } from '@lark-apaas/client-toolkit/logger';
 
 import type { Task, TaskPriority } from '@shared/api.interface';
-import { getTasks, createTask, updateTask, deleteTask } from '@client/src/api/tasks';
+import { getTasks, createTask, updateTask, deleteTask } from '@/api/tasks';
 
 const priorityColors: Record<TaskPriority, string> = {
   高: 'bg-red-100 text-red-700 border-red-200',
@@ -29,7 +28,7 @@ const TaskPage: React.FC = () => {
       const data = await getTasks(prio);
       setTasks(data);
     } catch (error) {
-      logger.error('加载任务失败', error);
+      console.error('加载任务失败', error);
       toast.error('加载任务失败');
     } finally {
       setLoading(false);
@@ -58,7 +57,7 @@ const TaskPage: React.FC = () => {
       setPriority('中');
       toast.success('任务已添加');
     } catch (error) {
-      logger.error('添加任务失败', error);
+      console.error('添加任务失败', error);
       toast.error('添加任务失败');
     } finally {
       setSubmitting(false);
@@ -70,7 +69,7 @@ const TaskPage: React.FC = () => {
       const updated = await updateTask(task.id, { completed: !task.completed });
       setTasks((prev) => prev.map((t) => (t.id === task.id ? updated : t)));
     } catch (error) {
-      logger.error('更新任务失败', error);
+      console.error('更新任务失败', error);
       toast.error('更新任务失败');
     }
   };
@@ -81,7 +80,7 @@ const TaskPage: React.FC = () => {
       setTasks((prev) => prev.filter((t) => t.id !== id));
       toast.success('任务已删除');
     } catch (error) {
-      logger.error('删除任务失败', error);
+      console.error('删除任务失败', error);
       toast.error('删除任务失败');
     }
   };
